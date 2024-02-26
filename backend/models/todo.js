@@ -1,19 +1,23 @@
 const mysql = require('mysql');
 
-const sql_port = process.env.PORT;
-const hostName = process.env.HOST;
-const userName = process.env.USER;
-const password = process.env.PASSWORD;
-const database = process.env.DATABASE;
+var connection = mysql.createConnection({
+    host     : process.env.RDS_HOSTNAME,
+    user     : process.env.RDS_USERNAME,
+    password : process.env.RDS_PASSWORD,
+    port     : process.env.RDS_PORT,
+    database : process.env.DATABASE
+  });
 
-const pool = mysql.createPool({
-    host: hostName,
-    port: sql_port,
-    user: userName,
-    password: password,
-    database: database,
-    connectionLimit: 10 
-});
+  connection.connect(function(err) {
+    if (err) {
+      console.error('Database connection failed: ' + err.stack);
+      return;
+    }
+  
+    console.log('Connected to database.');
+  });
+  
+connection.end();
 
 const Todo = {
     getAllTodos: () => {
