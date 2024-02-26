@@ -20,12 +20,12 @@ var connection = mysql.createConnection({
     console.log('Connected to database.');
   });
   
-connection.end();
+//   connection.end();
 
 const Todo = {
     getAllTodos: () => {
         return new Promise((resolve, reject) => {
-            pool.query('SELECT * FROM todos WHERE is_deleted = false', (err, results) => {
+            connection.query('SELECT * FROM todos WHERE is_deleted = false', (err, results) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -37,7 +37,7 @@ const Todo = {
 
     getTodoById: (id) => {
         return new Promise((resolve, reject) => {
-            pool.query('SELECT * FROM todos WHERE id = ? AND is_deleted = false', [id], (err, results) => {
+            connection.query('SELECT * FROM todos WHERE id = ? AND is_deleted = false', [id], (err, results) => {
                 if (err) {
                     reject(err);
                 } else if (results.length === 0) {
@@ -51,7 +51,7 @@ const Todo = {
 
     createTodo: (todo) => {
         return new Promise((resolve, reject) => {
-            pool.query('INSERT INTO todos SET ?', todo, (err, result) => {
+            connection.query('INSERT INTO todos SET ?', todo, (err, result) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -64,7 +64,7 @@ const Todo = {
 
     updateTodo: (id, updatedTodo) => {
         return new Promise((resolve, reject) => {
-            pool.query('UPDATE todos SET ? WHERE id = ?', [updatedTodo, id], (err, result) => {
+            connection.query('UPDATE todos SET ? WHERE id = ?', [updatedTodo, id], (err, result) => {
                 if (err) {
                     reject(err);
                 } else if (result.affectedRows === 0) {
@@ -78,7 +78,7 @@ const Todo = {
 
     deleteTodo: (id) => {
         return new Promise((resolve, reject) => {
-            pool.query('UPDATE todos SET is_deleted = true WHERE id = ?', [id], (err, result) => {
+            connection.query('UPDATE todos SET is_deleted = true WHERE id = ?', [id], (err, result) => {
                 if (err) {
                     reject(err);
                 } else if (result.affectedRows === 0) {
