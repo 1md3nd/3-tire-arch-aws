@@ -1,1 +1,1 @@
-# 3-tyre-arch-aws
+# 3-tire-arch-aws
