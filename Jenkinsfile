@@ -1,18 +1,30 @@
+/* groovylint-disable VariableTypeRequired */
 pipeline {
-    agent {
-        dockerfile true
+    environment {
+        backendImageName = "1md3nd/todo-backend-test"
+        backendImage = ""
     }
+
+    agent any
+
     stages {
-        stage('Test') {
-            node {
-            checkout scm
-            def backendImage = docker.build("backend-test:${env.BUILD_ID}","./backend")
-            backendImage.inside{
-                sh "node --version"
-            }
+        stage('Backend Test') {
+            script {
+                try{
+                    def backendImage = docker.build("${backendImageName}:${env.BUILD_ID}",'./backend')
+                    backendImage.inside{
+                        sh 'node --version'
+                    }
+                } catch (Exception e) {
+                    currentBuild.result = 'FAILURE'
+                    echo "Failed to build : ${e.message}"
+                } finally {
+                    if (backendImage) {
+                        echo "done building backend image"
+                        backendImage.remove()
+                    }
+                }
             }
         }
     }
-    
-    
 }
