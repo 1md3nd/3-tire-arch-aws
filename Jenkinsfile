@@ -11,8 +11,9 @@ pipeline {
         stage('Backend Test') {
             steps {
                 script {
+                    def backendImage
                     try{
-                        def backendImage = docker.build("${backendImageName}:${env.BUILD_ID}",'./backend')
+                        backendImage = docker.build("${backendImageName}:${env.BUILD_ID}",'./backend')
                         backendImage.inside{
                             sh 'node --version'
                         }
