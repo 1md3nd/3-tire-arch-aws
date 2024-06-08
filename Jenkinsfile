@@ -5,7 +5,10 @@ pipeline {
     stages {
         stage('Test') {
             steps {
-                sh 'node --version'
+                def backendImage = docker.build("backend-test:${env.BUILD_ID}","./backend")
+                backendImage.inside{
+                    sh "node --version"
+                }
             }
         }
     }
