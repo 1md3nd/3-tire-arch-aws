@@ -10,21 +10,24 @@ pipeline {
     stages {
         stage('Backend Test') {
             steps {
-                try{
-                    def backendImage = docker.build("${backendImageName}:${env.BUILD_ID}",'./backend')
-                    backendImage.inside{
-                        sh 'node --version'
-                    }
-                } catch (Exception e) {
-                    currentBuild.result = 'FAILURE'
-                    echo "Failed to build : ${e.message}"
-                } finally {
-                    if (backendImage) {
-                        echo "done building backend image"
-                        backendImage.remove()
+                script {
+                    try{
+                        def backendImage = docker.build("${backendImageName}:${env.BUILD_ID}",'./backend')
+                        backendImage.inside{
+                            sh 'node --version'
+                        }
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        echo "Failed to build : ${e.message}"
+                    } finally {
+                        if (backendImage) {
+                            echo "done building backend image"
+                            backendImage.remove()
+                        }
                     }
                 }
             }
+
         }
     }
 }
