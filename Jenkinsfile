@@ -9,7 +9,7 @@ pipeline {
 
     stages {
         stage('Backend Test') {
-            script {
+            steps {
                 try{
                     def backendImage = docker.build("${backendImageName}:${env.BUILD_ID}",'./backend')
                     backendImage.inside{
