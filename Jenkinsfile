@@ -28,7 +28,9 @@ pipeline {
         stage('Backend Deploy Image') {
             steps {
                 script {
-                    backendImage.push()
+                    docker.withRegistry('https://hub.docker.com/','dockerhub'){
+                        backendImage.push()
+                    }
                 }
             }
         }
