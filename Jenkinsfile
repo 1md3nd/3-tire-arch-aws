@@ -8,10 +8,9 @@ pipeline {
     agent any
 
     stages {
-        stage('Backend Test') {
+        stage('Backend Build Image') {
             steps {
                 script {
-                    def backendImage
                     try{
                         backendImage = docker.build("${backendImageName}:${env.BUILD_ID}",'./backend')
                         backendImage.inside{
@@ -21,14 +20,18 @@ pipeline {
                         currentBuild.result = 'FAILURE'
                         echo "Failed to build : ${e.message}"
                     } finally {
-                        if (backendImage) {
-                            echo "done building backend image"
-                            backendImage.remove()
+                        echo "done building backend image"
                         }
                     }
                 }
             }
-
+        stage('Backend Deploy Image') {
+            steps {
+                script {
+                    backendImage.push()
+                }
+            }
         }
+
     }
 }
