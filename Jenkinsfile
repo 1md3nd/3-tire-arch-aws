@@ -2,7 +2,9 @@
 pipeline {
     environment {
         backendImageName = "1md3nd/todo-backend-test"
+        frontendImageName = "1md3nd/todo-frontend-test"
         backendImage = ""
+        frontendImage = ""
     }
 
     agent any
@@ -33,7 +35,31 @@ pipeline {
                     }
                 }
             }
+        }stage('Frontend Build Image') {
+            steps {
+                script {
+                    try{
+                        frontendImage = docker.build("${frontendImageName}:${env.BUILD_ID}",'./frontend')
+                        frontendImage.inside{
+                            sh 'node --version'
+                        }
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        echo "Failed to build : ${e.message}"
+                    } finally {
+                        echo "done building backend image"
+                        }
+                    }
+                }
+            }
+        stage('Frontend Deploy Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com/','dockerhub'){
+                        frontendImage.push()
+                    }
+                }
+            }
         }
-
     }
 }
