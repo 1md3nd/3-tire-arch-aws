@@ -34,14 +34,14 @@ pipeline {
         stage('Backend Build And Deploy Image') {
             steps {
                 script {
-                    buildAndDeployImage('backend', backendImageName, 'backend')
+                    buildAndDeployImage('backend', backendImageName, './backend')
                 }
             }
         }
         stage('Frontend Build And Deploy Image') {
             steps {
                 script {
-                    buildAndDeployImage('frontend', backendImageName, 'frontend')
+                    buildAndDeployImage('frontend', frontendImageName, './frontend')
                 }
             }
         }
@@ -52,7 +52,7 @@ def buildAndDeployImage(imageType, imageName, path){
     image = ''
 
     try {
-        image = docker.build("${imageName}:${env.BUILD_ID}", "./${path}")
+        image = docker.build("${imageName}:${env.BUILD_ID}", "${path}")
         image.inside { sh 'node --version' }
     } catch (Exception e) {
         currentBuild.result = 'FAILURE'
@@ -63,8 +63,8 @@ def buildAndDeployImage(imageType, imageName, path){
 
     try {
         docker.withRegistry('', 'dockerhub') {
-            frontendImage.push()
-            frontendImage.push('latest')
+            image.push()
+            image.push('latest')
         }
     } catch (Exception e) {
         currentBuild.result = 'FAILURE'
