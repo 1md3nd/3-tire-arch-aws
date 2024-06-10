@@ -32,6 +32,7 @@ pipeline {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com/', 'dockerhub') {
                         backendImage.push()
+                        backendImage.push('latest')
                     }
                 }
             }
@@ -58,6 +59,7 @@ pipeline {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com/', 'dockerhub') {
                         frontendImage.push()
+                        frontendImage.push('latest')
                     }
                 }
             }
