@@ -50,14 +50,16 @@ pipeline {
 
         stage('Backend Build And Deploy Image') {
             steps {
-                script {
+                container('docker') {
+                    sh "echo $POD_CONTAINER"
                     buildAndDeployImage('backend', backendImageName, './backend')
                 }
             }
         }
         stage('Frontend Build And Deploy Image') {
             steps {
-                script {
+                container('docker') {
+                    sh "echo $POD_CONTAINER"
                     buildAndDeployImage('frontend', frontendImageName, './frontend')
                 }
             }
