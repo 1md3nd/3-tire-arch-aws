@@ -5,12 +5,23 @@ pipeline {
         frontendImageName = ''
     }
 
-    podTemplate(containers: [
-    containerTemplate(name: 'docker', image: 'docker:cli')
-  ])
-
     agent {
-        label 'docker'
+        kubernetes {
+            yaml '''\
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              lables:
+                name: docker
+            spec:
+              containers:
+              - name: docker
+                image: docker:cli
+                command:
+                - cat
+                tty: true
+            '''.stripIndent()
+        }
     }
 
     stages {
