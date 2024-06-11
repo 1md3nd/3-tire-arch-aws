@@ -11,11 +11,10 @@ pipeline {
             apiVersion: v1
             kind: Pod
             metadata:
-              lables:
-                name: docker
+            name: docker
             spec:
-              containers:
-              - name: docker
+            containers:
+            - name: docker
                 image: docker:cli
                 command:
                 - cat
