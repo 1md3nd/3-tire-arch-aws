@@ -15,10 +15,10 @@ pipeline {
             spec:
               containers:
               - name: docker
-              image: docker:cli
-              command:
-              - cat
-              tty: true
+                image: docker:cli
+                command:
+                - cat
+                tty: true
             '''.stripIndent()
         }
     }
