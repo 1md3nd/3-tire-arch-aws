@@ -1,0 +1,60 @@
+version: '3'
+
+services:
+  database:
+    image: mysql:latest
+    container_name: database
+    restart: always
+    networks:
+      - ThreeTierNetwork
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+    volumes:
+      - ./database:/var/lib/mysql
+    healthcheck:
+      test: mysqladmin ping -h localhost -u root -password=${DB_ROOT_PASSWORD}
+      start_period: 5s
+      timeout: 15s
+      retries: 3
+      interval: 5s
+
+
+
+  frontend:
+    # image: 1md3nd/todo-frontend-dev:latest
+    build: ./frontend
+    container_name: frontend
+    restart: always
+    ports:
+      - 3000:3000
+    depends_on:
+      - backend
+    networks:
+      - ThreeTierNetwork
+    
+  backend:
+    # image: 1md3nd/todo-backend-dev:latest
+    build: ./backend
+    container_name: backend
+    restart: always
+    ports:
+      - 3001:3001
+    environment:
+      - DB_HOSTNAME=database
+      - DB_USERNAME=root
+      - DB_PASSWORD=${DB_ROOT_PASSWORD}
+      - PORT=3306
+      - DATABASE=${DB_NAME}
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - ThreeTierNetwork
+
+networks:
+  ThreeTierNetwork:
+    driver: bridge
+
