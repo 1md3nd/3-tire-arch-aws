@@ -21,11 +21,9 @@ services:
       retries: 3
       interval: 5s
 
-
-
   frontend:
-    # image: 1md3nd/todo-frontend-dev:latest
-    build: ./frontend
+    image: 1md3nd/todo-frontend-dev:latest
+    # build: ./frontend
     container_name: frontend
     restart: always
     ports:
@@ -34,10 +32,12 @@ services:
       - backend
     networks:
       - ThreeTierNetwork
+    environment:
+      - BACKEND_ENDPOINT=backend:3001
     
   backend:
-    # image: 1md3nd/todo-backend-dev:latest
-    build: ./backend
+    image: 1md3nd/todo-backend-dev:latest
+    # build: ./backend
     container_name: backend
     restart: always
     ports:
