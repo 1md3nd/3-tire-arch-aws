@@ -1,14 +1,20 @@
-import React from "react";
-import Home from "./components/home";
+  import React from "react";
+  import Home from "./components/home";
+  import ErrorPage from "./components/error";
+  import { BrowserRouter, Routes, Route } from "react-router-dom";
+  import "./App.css";
 
-import "./App.css";
+  function App() {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />}/>
+          <Route path="*" element={<ErrorPage />}/>
+          {/* /404.html */}
+          {/* Add other routes here */}
+        </Routes>
+      </BrowserRouter>
+    );
+  }
 
-function App() {
-  return (
-    <div className="container">
-      <Home />
-    </div>
-  );
-}
-
-export default App;
+  export default App;
