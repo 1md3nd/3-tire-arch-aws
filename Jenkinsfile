@@ -1,7 +1,6 @@
-@Library('shared-library') _
-
 pipeline {
     agent any
+
     parameters {
         booleanParam(name: 'SKIP_DOCKER_BUILD', defaultValue: false, description: 'Skip Docker build steps')
     }
@@ -9,39 +8,79 @@ pipeline {
         backendImageName = ''
         frontendImageName = ''
     }
+
     stages {
-        stage('Set Branch Config') {
+        stage('Check main branch') {
+            when {
+                branch 'main'
+            }
             steps {
                 script {
-                    branchConfig()
+                    backendImageName = '1md3nd/todo-backend-prod'
+                    frontendImageName = '1md3nd/todo-frontend-prod'
                 }
             }
         }
-        stage('Backend Build And Deploy Image') {
+        stage('Check dev branch') {
+            when {
+                branch 'dev-*'
+            }
+            steps {
+                script {
+                    backendImageName = '1md3nd/todo-backend-dev'
+                    frontendImageName = '1md3nd/todo-frontend-dev'
+                }
+            }
+        }
+        stage('Build And Deploy Image') {
             when {
                 expression { !params.SKIP_DOCKER_BUILD }
             }
             steps {
                 script {
-                    buildAndDeployImage('backend', env.backendImageName, './backend')
+                    buildAndDeployImage('backend', backendImageName, './backend')
+                    buildAndDeployImage('frontend', frontendImageName, './frontend')
                 }
             }
         }
-        stage('Frontend Build And Deploy Image') {
-            when {
-                expression { !params.SKIP_DOCKER_BUILD }
-            }
+        stage('Deploy on Kubernetes') {
             steps {
-                script {
-                    buildAndDeployImage('frontend', env.frontendImageName, './frontend')
+                withKubeConfig([credentialsId: 'k8s']) {
+                    sh '''
+                    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                    chmod +x kubectl
+                    mkdir -p ~/.local/bin
+                    mv ./kubectl ~/.local/bin/kubectl
+                    ~/.local/bin/kubectl apply -f k8s/misc
+                    ~/.local/bin/kubectl apply -f k8s/deployments
+                    ~/.local/bin/kubectl apply -f k8s/services
+                    '''
                 }
             }
         }
-        stage('Deploy to Kubernetes') {
-            steps {
-                echo 'Deploying to Kubernetes...'
-                sh 'kubectl apply -f k8s/'
-            }
+    }
+}
+
+def buildAndDeployImage(imageType, imageName, path) {
+    def image = ''
+    try {
+        image = docker.build("${imageName}:${env.BUILD_ID}", "${path}")
+    } catch (Exception e) {
+        currentBuild.result = 'FAILURE'
+        echo "Failed to build ${imageType} image: ${e.message}"
+    } finally {
+        echo "Done building ${imageType} image"
+    }
+
+    try {
+        docker.withRegistry('', 'dockerhub') {
+            image.push()
+            image.push('latest')
         }
+    } catch (Exception e) {
+        currentBuild.result = 'FAILURE'
+        echo "Failed to deploy ${imageType} image: ${e.message}"
+    } finally {
+        echo "Done deploying ${imageType} image"
     }
 }
