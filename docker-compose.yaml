@@ -22,8 +22,8 @@ services:
       interval: 5s
 
   frontend:
-    # image: 1md3nd/todo-frontend-dev:latest
-    build: ./frontend
+    image: 1md3nd/todo-frontend-dev:latest
+    # build: ./frontend
     container_name: frontend
     restart: always
     ports:

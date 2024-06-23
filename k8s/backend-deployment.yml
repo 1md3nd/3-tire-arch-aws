@@ -12,6 +12,10 @@ spec:
       labels:
         app: todo-backend-dev-pod
     spec:
+      initContainers:
+      - name: init-db-check
+        image: busybox
+        command: ['sh', '-c', 'until nc -z -v -w30 todo-database-dev-service 3306; do echo "Waiting for database..."; sleep 5; done; echo "Database is up"']
       containers:
       - name: todo-backend-dev-cont
         image: 1md3nd/todo-backend-dev:latest

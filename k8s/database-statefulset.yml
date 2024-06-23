@@ -1,13 +1,12 @@
 apiVersion: apps/v1
-kind: Deployment
+kind:  StatefulSet
 metadata:
   name: todo-database-dev-deployment
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: todo-database-dev
-  strategy:
-    type: Recreate
   template:
     metadata:
       labels:
@@ -27,17 +26,31 @@ spec:
         volumeMounts:
         - name: mysql-persistent-storage
           mountPath: /var/lib/mysql
-      volumes:
-      - name: mysql-persistent-storage
-        persistentVolumeClaim:
-          claimName: mysql-pv-claim
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-persistent-storage
+    spec:
+      storageClassName: manual
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 8Gi
+    
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: todo-database-dev-service
 spec:
-  type: NodePort
   ports:
     - protocol: TCP
       port: 3306
