@@ -22,6 +22,7 @@ pipeline {
                 }
             }
         }
+
         stage('Check dev branch') {
             when {
                 branch 'dev-*'
@@ -40,8 +41,8 @@ pipeline {
             }
             steps {
                 script {
-                    buildAndDeployImage('backend', env.backendImageName, './backend')
-                    buildAndDeployImage('frontend', env.frontendImageName, './frontend')
+                    buildAndDeployImage('backend', backendImageName, './backend')
+                    buildAndDeployImage('frontend', frontendImageName, './frontend')
                 }
             }
         }
