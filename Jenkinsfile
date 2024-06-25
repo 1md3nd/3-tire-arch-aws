@@ -11,16 +11,25 @@ pipeline {
     }
 
     stages {
-        stage('Determine Image Names') {
+        stage('Check main branch') {
+            when {
+                branch 'main'
+            }
             steps {
                 script {
-                    if (env.BRANCH_NAME == 'main') {
-                        env.backendImageName = '1md3nd/todo-backend-prod'
-                        env.frontendImageName = '1md3nd/todo-frontend-prod'
-                    } else if (env.BRANCH_NAME.startsWith('dev-')) {
-                        env.backendImageName = '1md3nd/todo-backend-dev'
-                        env.frontendImageName = '1md3nd/todo-frontend-dev'
-                    }
+                    backendImageName = '1md3nd/todo-backend-prod'
+                    frontendImageName = '1md3nd/todo-frontend-prod'
+                }
+            }
+        }
+        stage('Check dev branch') {
+            when {
+                branch 'dev-*'
+            }
+            steps {
+                script {
+                    backendImageName = '1md3nd/todo-backend-dev'
+                    frontendImageName = '1md3nd/todo-frontend-dev'
                 }
             }
         }
