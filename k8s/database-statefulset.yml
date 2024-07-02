@@ -6,11 +6,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: todo-database-dev
+      name: todo-database-dev
   template:
     metadata:
       labels:
-        app: todo-database-dev
+        name: todo-database-dev
     spec:
       containers:
       - image: mysql:latest
@@ -43,7 +43,7 @@ spec:
       - ReadWriteOnce
       resources:
         requests:
-          storage: 8Gi
+          storage: 1Gi
     
 ---
 apiVersion: v1
@@ -56,4 +56,4 @@ spec:
       port: 3306
       targetPort: 3306
   selector:
-    app: todo-database-dev
+    name: todo-database-dev

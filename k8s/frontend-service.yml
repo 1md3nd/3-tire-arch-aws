@@ -5,7 +5,7 @@ metadata:
 spec:
   type: NodePort
   selector:
-    app: todo-frontend-dev-pod
+    name: todo-frontend-dev-pod
   ports:
     - port: 3000
       targetPort: 3000

@@ -6,15 +6,16 @@ spec:
   replicas: 2
   selector:
     matchLabels:
-      app: todo-frontend-dev-pod
+      name: todo-frontend-dev-pod
   template:
     metadata:
       labels:
-        app: todo-frontend-dev-pod
+        name: todo-frontend-dev-pod
     spec:
       containers:
       - name: todo-frontend-dev-cont
         image: 1md3nd/todo-frontend-dev:latest
+        imagePullPolicy: Always
         ports:
           - containerPort: 3000
         env:
@@ -22,9 +23,11 @@ spec:
             value: todo-backend-dev-service:3001
         resources:
           requests:
-            memory: "256Mi"
+            memory: "64Mi"
+            cpu: "10m"
           limits:
-            memory: "512Mi"
+            memory: "128Mi"
+            cpu: "500m"
         livenessProbe:
           httpGet:
             path: /
