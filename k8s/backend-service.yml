@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-backend-dev-service
+  annotations:
+    prometheus.io/scrape: 'true'
+spec:
+  selector:
+    name: todo-backend-dev-pod
+  ports:
+    - port: 3001
+      targetPort: 3001

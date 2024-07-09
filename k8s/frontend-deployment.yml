@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-frontend-dev-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: todo-frontend-dev-pod
+  template:
+    metadata:
+      labels:
+        name: todo-frontend-dev-pod
+    spec:
+      containers:
+      - name: todo-frontend-dev-cont
+        image: 1md3nd/todo-frontend-dev:latest
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3000
+        env:
+          - name: BACKEND_ENDPOINT
+            value: todo-backend-dev-service:3001
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "10m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        

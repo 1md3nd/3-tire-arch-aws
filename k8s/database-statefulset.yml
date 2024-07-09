@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind:  StatefulSet
+metadata:
+  name: todo-database-dev-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: todo-database-dev
+  template:
+    metadata:
+      labels:
+        name: todo-database-dev
+    spec:
+      containers:
+      - image: mysql:latest
+        name: todo-database-dev-cont
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: abcde
+        - name: MYSQL_DATABASE
+          value: test
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-persistent-storage
+    spec:
+      storageClassName: manual
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+    
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-database-dev-service
+spec:
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  selector:
+    name: todo-database-dev

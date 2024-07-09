@@ -1,11 +1,14 @@
-/* groovylint-disable CatchException, CompileStatic, DuplicateStringLiteral, VariableTypeRequired */
 pipeline {
+    agent any
+
+    parameters {
+        booleanParam(name: 'SKIP_DOCKER_BUILD', defaultValue: false, description: 'Skip Docker build steps')
+    }
+
     environment {
         backendImageName = ''
         frontendImageName = ''
     }
-
-    agent any
 
     stages {
         stage('Check main branch') {
@@ -19,6 +22,7 @@ pipeline {
                 }
             }
         }
+
         stage('Check dev branch') {
             when {
                 branch 'dev-*'
@@ -31,32 +35,46 @@ pipeline {
             }
         }
 
-        stage('Backend Build And Deploy Image') {
+        stage('Build And Deploy Images') {
+            when {
+                expression { !params.SKIP_DOCKER_BUILD }
+            }
             steps {
                 script {
                     buildAndDeployImage('backend', backendImageName, './backend')
+                    buildAndDeployImage('frontend', frontendImageName, './frontend')
                 }
             }
         }
-        stage('Frontend Build And Deploy Image') {
+
+        stage('Deploy on Kubernetes') {
             steps {
-                script {
-                    buildAndDeployImage('frontend', frontendImageName, './frontend')
+                withKubeConfig([credentialsId: 'k8s']) {
+                    script {
+                        if (!fileExists('~/.local/bin/kubectl')) {
+                            sh '''
+                                curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                                chmod +x kubectl
+                                mkdir -p ~/.local/bin
+                                mv ./kubectl ~/.local/bin/kubectl
+                            '''
+                        }
+
+                        sh "~/.local/bin/kubectl apply -f k8s"
+                    }
                 }
             }
         }
     }
 }
 
-def buildAndDeployImage(imageType, imageName, path){
-    image = ''
-
+def buildAndDeployImage(imageType, imageName, path) {
+    def image = ''
     try {
         image = docker.build("${imageName}:${env.BUILD_ID}", "${path}")
-        image.inside { sh 'node --version' }
     } catch (Exception e) {
         currentBuild.result = 'FAILURE'
-        echo "Failed to build ${imageType} image: ${e.message}"
+        error "Failed to build ${imageType} image: ${e.message}"
     } finally {
         echo "Done building ${imageType} image"
     }
@@ -68,7 +86,7 @@ def buildAndDeployImage(imageType, imageName, path){
         }
     } catch (Exception e) {
         currentBuild.result = 'FAILURE'
-        echo "Failed to deploy ${imageType} image: ${e.message}"
+        error "Failed to deploy ${imageType} image: ${e.message}"
     } finally {
         echo "Done deploying ${imageType} image"
     }

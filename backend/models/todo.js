@@ -1,93 +1,100 @@
-const mysql = require('mysql');
 const dotenv = require('dotenv');
 dotenv.config();
+const mysql = require('mysql2/promise');
+const fs = require('fs').promises;
+
+const sql_port = process.env.PORT;
+const hostName = process.env.DB_HOSTNAME;
+const userName = process.env.DB_USERNAME;
+const password = process.env.DB_PASSWORD;
+const database = process.env.DATABASE;
+
+const pool = mysql.createPool({
+    host: hostName,
+    port: sql_port,
+    user: userName,
+    password: password,
+    database: database,
+    connectionLimit: 10
+});
 
 
-var connection = mysql.createConnection({
-    host     : process.env.RDS_HOSTNAME,
-    user     : process.env.RDS_USERNAME,
-    password : process.env.RDS_PASSWORD,
-    port     : process.env.RDS_PORT,
-    database : process.env.DATABASE
-  });
-
-  connection.connect(function(err) {
-    if (err) {
-      console.error('Database connection failed: ' + err.stack);
-      return;
+async function checkAndCreateTodosTable() {
+    try {
+        // Check if the todos table already exists
+        const [rows, fields] = await pool.query("SHOW TABLES LIKE 'todos'");
+        if (rows.length === 0) {
+            // If the table does not exist, read the SQL script from file and execute it
+            const sqlScript = await fs.readFile('./models/create_todos_table.sql', 'utf-8');
+            const connection = await pool.getConnection();
+            await connection.query(sqlScript);
+            connection.release();
+            console.log('Todos table created successfully.');
+        } else {
+            console.log('Todos table already exists.');
+        }
+    } catch (error) {
+        console.error('Error checking or creating todos table:', error);
     }
-  
-    console.log('Connected to database.');
-  });
-  
-//   connection.end();
+}
+
+// Invoke the function when your backend server starts
+checkAndCreateTodosTable();
 
 const Todo = {
-    getAllTodos: () => {
-        return new Promise((resolve, reject) => {
-            connection.query('SELECT * FROM todos WHERE is_deleted = false', (err, results) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(results);
-                }
-            });
-        });
+    getAllTodos: async () => {
+        try {
+            const [results, fields] = await pool.query('SELECT * FROM todos WHERE is_deleted = false');
+            return results;
+        } catch (error) {
+            throw error;
+        }
     },
 
-    getTodoById: (id) => {
-        return new Promise((resolve, reject) => {
-            connection.query('SELECT * FROM todos WHERE id = ? AND is_deleted = false', [id], (err, results) => {
-                if (err) {
-                    reject(err);
-                } else if (results.length === 0) {
-                    resolve(null); // No todo found with the given id
-                } else {
-                    resolve(results[0]);
-                }
-            });
-        });
+    getTodoById: async (id) => {
+        try {
+            const [results, fields] = await pool.query('SELECT * FROM todos WHERE id = ? AND is_deleted = false', [id]);
+            if (results.length === 0) {
+                return null;
+            }
+            return results[0];
+        } catch (error) {
+            throw error;
+        }
     },
 
-    createTodo: (todo) => {
-        return new Promise((resolve, reject) => {
-            connection.query('INSERT INTO todos SET ?', todo, (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    const newTodo = { id: result.insertId, ...todo };
-                    resolve(newTodo);
-                }
-            });
-        });
+    createTodo: async (todo) => {
+        try {
+            const [result, fields] = await pool.query('INSERT INTO todos SET ?', todo);
+            const newTodo = { id: result.insertId, ...todo };
+            return newTodo;
+        } catch (error) {
+            throw error;
+        }
     },
 
-    updateTodo: (id, updatedTodo) => {
-        return new Promise((resolve, reject) => {
-            connection.query('UPDATE todos SET ? WHERE id = ?', [updatedTodo, id], (err, result) => {
-                if (err) {
-                    reject(err);
-                } else if (result.affectedRows === 0) {
-                    resolve(null); // No todo found with the given id
-                } else {
-                    resolve(updatedTodo);
-                }
-            });
-        });
+    updateTodo: async (id, updatedTodo) => {
+        try {
+            const [result, fields] = await pool.query('UPDATE todos SET ? WHERE id = ?', [updatedTodo, id]);
+            if (result.affectedRows === 0) {
+                return null;
+            }
+            return updatedTodo;
+        } catch (error) {
+            throw error;
+        }
     },
 
-    deleteTodo: (id) => {
-        return new Promise((resolve, reject) => {
-            connection.query('UPDATE todos SET is_deleted = true WHERE id = ?', [id], (err, result) => {
-                if (err) {
-                    reject(err);
-                } else if (result.affectedRows === 0) {
-                    resolve(null); // No todo found with the given id
-                } else {
-                    resolve({ id });
-                }
-            });
-        });
+    deleteTodo: async (id) => {
+        try {
+            const [result, fields] = await pool.query('UPDATE todos SET is_deleted = true WHERE id = ?', [id]);
+            if (result.affectedRows === 0) {
+                return null;
+            }
+            return { id };
+        } catch (error) {
+            throw error;
+        }
     }
 };
 
